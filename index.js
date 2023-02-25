@@ -59,6 +59,7 @@ document.addEventListener("touchmove", (event) => {
 
 	if (lastTouchCoordinates !== null) {
 		const { x, y } = lastTouchCoordinates;
+		if (Math.abs(clientX - x) < 10 && Math.abs(clientY - y) < 10) return;
 		degrees = Math.atan2(y - clientY, clientX - x) * (180 / Math.PI);
 	}
 
@@ -123,7 +124,7 @@ const animationLoop = (currentTime) => {
 	let ballDistance = ballSpeed * deltaTime;
 
 	moveBall(ballDistance);
-	renderFadingTailCell(ballSpeed);
+	if (degrees !== null) renderFadingTailCell(ballSpeed);
 
 	lastTime = currentTime;
 	requestAnimationFrame(animationLoop);
