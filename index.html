@@ -6,9 +6,14 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>GAME</title>
 		<link rel="stylesheet" href="./style.css" />
-		<script defer src="./index.js"></script>
 	</head>
-	<body scroll="no" id="game-field">
-		<div id="ball" class="ball"></div>
+	<body scroll="no">
+		<main id="game-field"></main>
+		<script
+			src="https://cdn.socket.io/4.6.0/socket.io.min.js"
+			integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+"
+			crossorigin="anonymous"
+		></script>
+		<script type="module" src="./index.js"></script>
 	</body>
 </html>

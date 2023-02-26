@@ -1,33 +1,26 @@
+:root {
+	font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
 * {
 	box-sizing: border-box;
 }
 
 html,
-body {
+body,
+#game-field {
 	overflow-x: hidden;
-	height: 100%;
-}
-
-body {
 	position: relative;
 	height: 100%;
 	margin: 0;
 }
 
-.ball {
+.player {
 	position: absolute;
-	width: 100px;
-	height: 100px;
-	border-radius: 50%;
 	top: 50%;
 	left: 50%;
-	transform: translate(-50%, -50%);
-	background-color: midnightblue;
-}
-
-.tail-cell {
-	animation: fadeTail 1s linear;
-	animation-fill-mode: forwards;
+	border-radius: 50%;
+	animation: fadeTail var(--animation-duration) linear;
 }
 
 @keyframes fadeTail {
