@@ -31,14 +31,14 @@ export class Game {
 		this.player = new Player(this.size)
 
 		this.socket.on('onlinePlayersUpdate', this.onOnlinePlayersUpdate.bind(this))
-		setInterval(this.sendPlayerCoordinates.bind(this), tick)
+		setInterval(this.updatePlayerOnServer.bind(this), tick)
 	}
 
 	onOnlinePlayersUpdate(players) {
 		this.onlinePlayers = players.filter(player => player.id !== this.socket.id)
 	}
 
-	sendPlayerCoordinates() {
+	updatePlayerOnServer() {
 		if (!this.player || !this.socket.id) return
 
 		this.socket.emit('updatePlayer', {
