@@ -1,62 +1,85 @@
-import { CurrentPlayer, Player } from "./player.js";
+import {Player} from './player.js'
+
+const tick = 1000 / 30;
 
 export class Game {
-	socket = io("ws://localhost:3000");
+	socket = io('ws://localhost:3000')
+	gameField = document.createElement('canvas')
+	size = 0
+	step = 0
+	ctx = null
+	player = null
+	onlinePlayers = []
 
-	id = null;
+	/**
+	 * @param {HTMLElement} hostElement
+	 * @param {number} size
+	 */
+	constructor({
+		hostElement,
+		size = 7,
+	}) {
+		this.gameField.height = this.gameField.width = Math.min(window.innerWidth, window.innerHeight) - 100
+		hostElement.appendChild(this.gameField)
 
-	players = new Map();
+		this.size = size
+		this.step = this.gameField.width / this.size
 
-	currentPlayer = null;
+		this.ctx = this.gameField.getContext('2d')
 
-	constructor(gameFieldElement) {
-		this.gameFieldElement = gameFieldElement;
+		this.player = new Player(this.size)
 
-		this.socket.on("id", (id) => {
-			this.id = id;
-			this.currentPlayer = new CurrentPlayer({
-				id,
-				gameFieldElement,
-			});
-		});
+		this.socket.on('onlinePlayersUpdate', this.onOnlinePlayersUpdate.bind(this))
+		setInterval(this.sendPlayerCoordinates.bind(this), tick)
+	}
 
-		this.socket.on("users coordinates", (users) => {
-			users.forEach(({ id, coordinates }) => {
-				if (!this.players.has(id) && id !== this.id) {
-					this.players.set(id, new Player({ id, coordinates }));
-				} else if (id !== this.id) {
-					this.players.get(id).coordinates = coordinates;
-				}
-			});
+	onOnlinePlayersUpdate(players) {
+		this.onlinePlayers = players
+	}
 
-			this.players.forEach((player) => {
-				if (!users.find((user) => user.id === player.id)) {
-					this.players.delete(player.id);
-				}
-			});
-		});
+	sendPlayerCoordinates() {
+		if (!this.player) return
+
+		this.socket.emit('updatePlayer', {
+			segments: this.player.segments,
+			color: this.player.color,
+		})
+	}
+
+	drawGrid() {
+		this.ctx.strokeStyle = 'black'
+		this.ctx.lineWidth = 0.1
+
+		for (let i = 1; i < this.size; i++) {
+			this.ctx.beginPath()
+			this.ctx.moveTo(0, i * this.step)
+			this.ctx.lineTo(this.gameField.width, i * this.step)
+			this.ctx.stroke()
+
+			this.ctx.beginPath()
+			this.ctx.moveTo(i * this.step, 0)
+			this.ctx.lineTo(i * this.step, this.gameField.height)
+			this.ctx.stroke()
+		}
+	}
+
+	renderPlayer(player) {
+		player.segments.forEach(segment => {
+			this.ctx.fillStyle = player.color
+			this.ctx.fillRect(segment.x * this.step, segment.y * this.step, this.step, this.step)
+		})
+	}
+
+	startRendering() {
+		this.ctx.clearRect(0, 0, this.gameField.width, this.gameField.height)
+		this.drawGrid()
+		this.renderPlayer(this.player)
+		this.onlinePlayers.forEach(this.renderPlayer.bind(this))
+
+		requestAnimationFrame(this.startRendering.bind(this))
 	}
 
 	start() {
-		this.renderFrame();
+		this.startRendering()
 	}
-
-	renderFrame = () => {
-		const frameFragment = document.createDocumentFragment();
-		this.players.forEach((player) => {
-			frameFragment.appendChild(player.render());
-		});
-
-		if (this.currentPlayer) {
-			frameFragment.appendChild(this.currentPlayer.render());
-
-			this.socket.emit("user coordinates", {
-				id: this.id,
-				coordinates: this.currentPlayer.coordinates,
-			});
-		}
-
-		this.gameFieldElement.appendChild(frameFragment);
-		requestAnimationFrame(this.renderFrame);
-	};
 }

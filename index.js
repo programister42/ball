@@ -1,6 +1,9 @@
-import { Game } from "./game.js";
+import {Game} from './game.js'
 
-const gameField = document.querySelector("#game-field");
+const root = document.getElementById('root')
 
-const game = new Game(gameField);
-game.start();
+const game = new Game({
+	hostElement: root,
+	size: 25,
+})
+game.start()
