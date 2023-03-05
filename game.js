@@ -1,6 +1,6 @@
 import {Player} from './player.js'
 
-const tick = 1000 / 30;
+const tick = 1000 / 60;
 
 export class Game {
 	socket = io('wss://ball-server.onrender.com')
@@ -35,13 +35,15 @@ export class Game {
 	}
 
 	onOnlinePlayersUpdate(players) {
-		this.onlinePlayers = players
+		this.onlinePlayers = players.filter(player => player.id !== this.socket.id)
 	}
 
 	sendPlayerCoordinates() {
-		if (!this.player) return
+		if (!this.player || !this.socket.id) return
 
 		this.socket.emit('updatePlayer', {
+			id: this.socket.id,
+			lastUpdate: Date.now(),
 			segments: this.player.segments,
 			color: this.player.color,
 		})
