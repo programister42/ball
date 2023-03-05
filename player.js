@@ -105,6 +105,9 @@ export class Player {
 		const xDiff = clientX - lastX
 		const yDiff = clientY - lastY
 
+		// reduce sensitivity
+		if (Math.abs(xDiff) < 10 && Math.abs(yDiff) < 10) return
+
 		if (Math.abs(xDiff) > Math.abs(yDiff)) {
 			if (xDiff > 0) {
 				this.move(directions.RIGHT)
