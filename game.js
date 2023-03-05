@@ -3,7 +3,8 @@ import {Player} from './player.js'
 const tick = 1000 / 30;
 
 export class Game {
-	socket = io('ws://localhost:3000')
+	socket = io('wss://ball-server.onrender.com')
+	// socket = io('ws://localhost:3000')
 	gameField = document.createElement('canvas')
 	size = 0
 	step = 0
@@ -73,8 +74,8 @@ export class Game {
 	startRendering() {
 		this.ctx.clearRect(0, 0, this.gameField.width, this.gameField.height)
 		this.drawGrid()
-		this.renderPlayer(this.player)
 		this.onlinePlayers.forEach(this.renderPlayer.bind(this))
+		this.renderPlayer(this.player)
 
 		requestAnimationFrame(this.startRendering.bind(this))
 	}
