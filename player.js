@@ -10,9 +10,12 @@ const directions = {
 export class Player {
 	fieldSize = 0
 	color = getRandomColor()
+	speed = 100
 	defaultSegmentsNumber = 5
 	segments = []
 	lastTouchCoordinates = null
+
+	#direction = null
 
 	constructor(fieldSize) {
 		this.fieldSize = fieldSize
@@ -24,35 +27,44 @@ export class Player {
 			})
 		}
 
-		document.addEventListener('keydown', this.onKeyDown.bind(this))
+		setInterval(this.move.bind(this), this.speed)
 
-		// [BETA] mobile support (touch events)
-		// TODO: refactor
+		document.addEventListener('keydown', this.onKeyDown.bind(this))
 		document.addEventListener('touchstart', this.onTouchStart.bind(this))
 		document.addEventListener('touchmove', this.onTouchMove.bind(this))
 		document.addEventListener('touchend', this.onTouchEnd.bind(this))
 	}
 
-	getCorrectCoordinates(x, y) {
-		if (x < 0) {
-			x = this.fieldSize - 1
-		} else if (x >= this.fieldSize) {
-			x = 0
-		}
+	get direction() { return this.#direction }
 
-		if (y < 0) {
-			y = this.fieldSize - 1
-		} else if (y >= this.fieldSize) {
-			y = 0
-		}
+	set direction(value) {
+		if (
+			this.direction === value ||
+			this.direction === directions.UP && value === directions.DOWN ||
+			this.direction === directions.DOWN && value === directions.UP ||
+			this.direction === directions.LEFT && value === directions.RIGHT ||
+			this.direction === directions.RIGHT && value === directions.LEFT
+		) return
+
+		this.#direction = value
+		this.move()
+	}
+
+	getCorrectCoordinates(x, y) {
+		if (x < 0) x = this.fieldSize - 1
+		else if (x >= this.fieldSize) x = 0
+
+		if (y < 0) y = this.fieldSize - 1
+		else if (y >= this.fieldSize) y = 0
 
 		return {x, y}
 	}
 
-	move(direction) {
-		let {x, y} = this.segments[0]
+	move() {
+		if (!this.direction) return
 
-		switch (direction) {
+		let {x, y} = this.segments[0]
+		switch (this.direction) {
 			case directions.UP:
 				y--
 				break
@@ -80,19 +92,19 @@ export class Player {
 		switch (event.key) {
 			case 'ArrowUp':
 			case 'w':
-				this.move(directions.UP)
+				this.direction = directions.UP
 				break
 			case 'ArrowDown':
 			case 's':
-				this.move(directions.DOWN)
+				this.direction = directions.DOWN
 				break
 			case 'ArrowLeft':
 			case 'a':
-				this.move(directions.LEFT)
+				this.direction = directions.LEFT
 				break
 			case 'ArrowRight':
 			case 'd':
-				this.move(directions.RIGHT)
+				this.direction = directions.RIGHT
 				break
 		}
 	}
@@ -116,15 +128,15 @@ export class Player {
 
 		if (Math.abs(xDiff) > Math.abs(yDiff)) {
 			if (xDiff > 0) {
-				this.move(directions.RIGHT)
+				this.direction = directions.RIGHT
 			} else {
-				this.move(directions.LEFT)
+				this.direction = directions.LEFT
 			}
 		} else {
 			if (yDiff > 0) {
-				this.move(directions.DOWN)
+				this.direction = directions.DOWN
 			} else {
-				this.move(directions.UP)
+				this.direction = directions.UP
 			}
 		}
 
