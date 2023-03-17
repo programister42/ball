@@ -1,16 +1,19 @@
 import {Player} from './player.js'
+import {getRandomColor} from './getRandomColor.js'
 
 const tick = 1000 / 60;
+const defaultSize = 51;
 
 export class Game {
 	socket = io('wss://ball-server.onrender.com')
 	// socket = io('ws://localhost:3000')
 	gameField = document.createElement('canvas')
-	size = 0
+	size = defaultSize
 	step = 0
 	ctx = null
 	player = null
 	onlinePlayers = []
+	apple = null
 
 	/**
 	 * @param {HTMLElement} hostElement
@@ -18,7 +21,7 @@ export class Game {
 	 */
 	constructor({
 		hostElement,
-		size = 7,
+		size = defaultSize,
 	}) {
 		this.gameField.height = this.gameField.width = Math.min(window.innerWidth, window.innerHeight) - 100
 		hostElement.appendChild(this.gameField)
@@ -30,12 +33,19 @@ export class Game {
 
 		this.player = new Player(this.size)
 
-		this.socket.on('onlinePlayersUpdate', this.onOnlinePlayersUpdate.bind(this))
+		this.socket.on('serverUpdate', this.onServerUpdate.bind(this))
+		this.socket.on('appleEaten', this.onAppleEaten.bind(this))
 		setInterval(this.updatePlayerOnServer.bind(this), tick)
 	}
 
-	onOnlinePlayersUpdate(players) {
+	onServerUpdate({players, apple}) {
 		this.onlinePlayers = players.filter(player => player.id !== this.socket.id)
+		this.apple = apple
+	}
+
+	onAppleEaten(id) {
+		if (id !== this.socket.id) return
+		this.player.grow()
 	}
 
 	updatePlayerOnServer() {
@@ -73,11 +83,19 @@ export class Game {
 		})
 	}
 
+	renderApple() {
+		if (!this.apple) return
+
+		this.ctx.fillStyle = getRandomColor()
+		this.ctx.fillRect(this.apple.x * this.step, this.apple.y * this.step, this.step, this.step)
+	}
+
 	startRendering() {
 		this.ctx.clearRect(0, 0, this.gameField.width, this.gameField.height)
 		this.drawGrid()
 		this.onlinePlayers.forEach(this.renderPlayer.bind(this))
 		this.renderPlayer(this.player)
+		this.renderApple()
 
 		requestAnimationFrame(this.startRendering.bind(this))
 	}

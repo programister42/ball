@@ -4,6 +4,6 @@ const root = document.getElementById('root')
 
 const game = new Game({
 	hostElement: root,
-	size: 25,
+	size: 51,
 })
 game.start()

@@ -1,3 +1,5 @@
+import {getRandomColor} from './getRandomColor.js'
+
 const directions = {
 	UP: 'UP',
 	DOWN: 'DOWN',
@@ -7,16 +9,15 @@ const directions = {
 
 export class Player {
 	fieldSize = 0
-	color = `#${Math.floor(Math.random() * 16777215).toString(16)}`
-
-	segmentsNumber = 5
+	color = getRandomColor()
+	defaultSegmentsNumber = 5
 	segments = []
 	lastTouchCoordinates = null
 
 	constructor(fieldSize) {
 		this.fieldSize = fieldSize
 		const fieldCenter = Math.floor(fieldSize / 2)
-		for (let i = 0; i < this.segmentsNumber; i++) {
+		for (let i = 0; i < this.defaultSegmentsNumber; i++) {
 			this.segments.push({
 				x: fieldCenter - i,
 				y: fieldCenter,
@@ -68,6 +69,11 @@ export class Player {
 
 		this.segments.unshift(this.getCorrectCoordinates(x, y))
 		this.segments.pop()
+	}
+
+	grow() {
+		const lastSegment = this.segments.at(-1)
+		this.segments.push(lastSegment)
 	}
 
 	onKeyDown(event) {
