@@ -1,13 +1,16 @@
 import {Player} from './player.js'
 import {getRandomColor} from './getRandomColor.js'
-
-const tick = 1000 / 60;
-const defaultSize = 51;
+import {
+	tick,
+	defaultSize, defaultSegmentsNumber,
+} from './constants.js'
 
 export class Game {
 	socket = io('wss://ball-server.onrender.com')
 	// socket = io('ws://localhost:3000')
 	gameField = document.createElement('canvas')
+	scoreElement = null
+	scoreArray = []
 	size = defaultSize
 	step = 0
 	ctx = null
@@ -15,13 +18,10 @@ export class Game {
 	onlinePlayers = []
 	apple = null
 
-	/**
-	 * @param {HTMLElement} hostElement
-	 * @param {number} size
-	 */
 	constructor({
 		hostElement,
 		size = defaultSize,
+		scoreElement = null,
 	}) {
 		this.gameField.height = this.gameField.width = Math.min(window.innerWidth, window.innerHeight) - 100
 		hostElement.appendChild(this.gameField)
@@ -29,23 +29,33 @@ export class Game {
 		this.size = size
 		this.step = this.gameField.width / this.size
 
+		this.scoreElement = scoreElement
+
 		this.ctx = this.gameField.getContext('2d')
 
 		this.player = new Player(this.size)
 
 		this.socket.on('serverUpdate', this.onServerUpdate.bind(this))
 		this.socket.on('appleEaten', this.onAppleEaten.bind(this))
+		this.socket.on('playerDied', this.onPlayerDied.bind(this))
 		setInterval(this.updatePlayerOnServer.bind(this), tick)
 	}
 
 	onServerUpdate({players, apple}) {
 		this.onlinePlayers = players.filter(player => player.id !== this.socket.id)
 		this.apple = apple
+
+		if (this.scoreElement) this.renderScore(players)
 	}
 
 	onAppleEaten(id) {
 		if (id !== this.socket.id) return
 		this.player.grow()
+	}
+
+	onPlayerDied(id) {
+		if (id !== this.socket.id) return
+		this.player.reset()
 	}
 
 	updatePlayerOnServer() {
@@ -57,6 +67,24 @@ export class Game {
 			segments: this.player.segments,
 			color: this.player.color,
 		})
+	}
+
+	renderScore(players) {
+		if (JSON.stringify(this.scoreArray) === JSON.stringify(players)) return
+
+		this.scoreArray = players
+
+		this.scoreElement.innerHTML = ''
+		this.scoreArray
+			.sort((a, b) => b.segments.length - a.segments.length)
+			.forEach(player => {
+				this.scoreElement.innerHTML += `
+					<div class="score-row">
+						<span class="player-color" style="background-color: ${player.color}"></span>
+						<span>${player.id === this.socket.id ? '(You)' : ''} ${player.segments.length - defaultSegmentsNumber}</span>
+					</div>
+				`
+			})
 	}
 
 	drawGrid() {
