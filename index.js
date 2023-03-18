@@ -5,7 +5,7 @@ const scoreElement = document.getElementById('score')
 
 const game = new Game({
 	hostElement: root,
-	size: 41,
+	size: 51,
 	scoreElement,
 })
 game.start()
